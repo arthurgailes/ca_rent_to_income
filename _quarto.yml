@@ -1,5 +1,7 @@
 project:
-  title: "ca_rent_to_income"
-
+  title: "California Rent to Income Map"
+  type: website
+  output-dir: docs
+  
 editor: visual
 
