@@ -1,7 +1,7 @@
 ---
 title: "Statewide rents-to-income ratio map"
 author: "Arthur Gailes"
-date: "5/22/2021"
+date: "`r Sys.Date()`"
 format: 
   html:
     code-fold: true
@@ -36,7 +36,7 @@ place_data_labs <- place_data |> mutate(
     home_inc_ratio, 
     c(0, 1, 3, 5, Inf),
     paste(c("0-1", "1-2.9", "3-5", "5 or more"), "to 1")),
-  rent_inc_pct_str = scales::percent(rent_inc_pct),
+  rent_inc_pct_str = scales::percent(rent_inc_pct, accuracy = 0.1),
   rent_inc_lab = cut(
     rent_inc_pct,
     c(0, 0.1, 0.3, 0.4, Inf),
