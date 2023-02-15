@@ -56,6 +56,8 @@ mapview(
   layer.name = "Ratio of Home Values to Income")
 ```
 
+-   Universe: Owner-occupied housing units
+
 ### Rents as a percentage of monthly income
 
 ```{r}
