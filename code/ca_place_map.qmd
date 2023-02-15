@@ -27,6 +27,7 @@ place_data <- st_read("data/tidy/place_acs_data.gpkg", quiet = TRUE)
 ca_geo <- st_read("data/tidy/ca_shp.gpkg", quiet = TRUE)
 ca_metro_data <- st_read("data/tidy/metro_acs_data.gpkg", quiet = TRUE)
 ```
+
 ```{r}
 #| echo: false
 #| label: data-proc
@@ -44,7 +45,6 @@ place_data_labs <- place_data |> mutate(
   )
 )
 ```
-
 
 ### Home Values to Income
 
