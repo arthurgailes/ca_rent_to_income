@@ -5,6 +5,8 @@ date: "5/22/2021"
 format: 
   html:
     code-fold: true
+editor_options: 
+  chunk_output_type: console
 ---
 
 Project Description: A statewide map comparing the median home price in every jurisdiction to metropolitan household income. Generally, three to five is considered to be a healthy rate---this interactive map will reveal potentially exclusionary jurisdictions.
@@ -33,7 +35,7 @@ place_data_labs <- place_data |> mutate(
   home_inc_fac = cut(
     home_inc_ratio, 
     c(0, 1, 3, 5, Inf),
-    paste(c("0-1", "1-3", "3-5", "5 or more"), "to 1")),
+    paste(c("0-1", "1-2.9", "3-5", "5 or more"), "to 1")),
   rent_inc_pct_str = scales::percent(rent_inc_pct),
   rent_inc_lab = cut(
     rent_inc_pct,
@@ -47,11 +49,19 @@ place_data_labs <- place_data |> mutate(
 ### Home Values to Income
 
 ```{r}
-mapview(place_data, zcol = 'home_inc_ratio')
+mapview(
+  place_data_labs, 
+  zcol = 'home_inc_fac', 
+  label = "home_inc_ratio",
+  layer.name = "Ratio of Home Values to Income")
 ```
 
 ### Rents as a percentage of monthly income
 
 ```{r}
-mapview(place_data, zcol = 'rent_inc_pct')
+mapview(
+  place_data_labs, 
+  zcol = 'rent_inc_lab',
+  label = "rent_inc_pct_str",
+  layer.name = "Gross Rent % of Monthly Income")
 ```
