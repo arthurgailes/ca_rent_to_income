@@ -9,17 +9,29 @@ format:
 
 Project Description: A statewide map comparing the median home price in every jurisdiction to metropolitan household income. Generally, three to five is considered to be a healthy rate---this interactive map will reveal potentially exclusionary jurisdictions.
 
-Note: the title says rents to income, but the description specifies home price, so I did both. Rents are compared to monthly income.
+*Note*: the title says rents to income, but the description specifies home price, so I did both. Rents are compared to monthly income.
 
 ```{r setup}
 #| include: false
 #| message: false
-
 pacman::p_load(sf, dplyr, mapview, here)
 knitr::opts_knit$set(root.dir = here())
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
-
 ```{r}
 #| include: false
+
+place_data <- st_read("data/tidy/place_acs_data.gpkg", quiet = TRUE)
+ca_geo <- st_read("data/tidy/ca_shp.gpkg", quiet = TRUE)
+ca_metro_data <- st_read("data/tidy/metro_acs_data.gpkg", quiet = TRUE)
 ```
 
+### Home Values to Income
+```{r}
+mapview(place_data, zcol = 'home_inc_ratio')
+```
+
+### Rents as a percentage of monthly income
+```{r}
+mapview(place_data, zcol = 'rent_inc_pct')
+```

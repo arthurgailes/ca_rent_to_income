@@ -27,13 +27,15 @@ ca_metro_data <- merge(ca_metro_geo, metro_data, by = "GEOID")
 place_data <- rename_with(juris_data, tolower) |> 
   select(-ends_with("m")) |> 
   rename(place_id = geoid, place = name) |> 
-  mutate(place = gsub(", California", "", place))
+  mutate(place = gsub(", California", "", place)) |> 
+  st_as_sf()
 
 ca_geo <- rename_with(ca_geo, tolower)
 
 ca_metro_data <- rename_with(ca_metro_data, tolower) |> 
   select(-ends_with("m")) |> 
-  rename(cbsa = name, cbsa_id = geoid)
+  rename(cbsa = name, cbsa_id = geoid) |> 
+  st_as_sf()
 
 # join places to metro by their centroid
 metro_place_data <- st_join(ca_metro_data, st_centroid(place_data), left = FALSE) |> 
@@ -43,13 +45,14 @@ metro_place_data <- st_join(ca_metro_data, st_centroid(place_data), left = FALSE
 expect_true(between(nrow(metro_place_data), nrow(ca_metro_data), nrow(juris_data)))
 
 place_data <- inner_join(place_data, metro_place_data, by = "place_id") |> 
-  mutate(home_inc_ratio = median_hh_income_cbsa / median_home_value,
-    rent_inc_ratio = median_hh_income_cbsa / 12 / median_gross_rent)
+  mutate(home_inc_ratio = median_home_value / median_hh_income_cbsa,
+    rent_inc_pct = median_gross_rent / (median_hh_income_cbsa / 12) ) |> 
+  st_as_sf()
 
 
 ## save ------------------------------------------------------------------------
 
-st_write(juris_data, "data/tidy/place_acs_data.gpkg", delete_dsn = TRUE)
+st_write(place_data, "data/tidy/place_acs_data.gpkg", delete_dsn = TRUE)
 st_write(ca_geo, "data/tidy/ca_shp.gpkg", delete_dsn = TRUE)
 st_write(ca_metro_data, "data/tidy/metro_acs_data.gpkg", delete_dsn = TRUE)
 
