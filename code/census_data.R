@@ -2,6 +2,8 @@ if(!require(pacman)) install.packages('pacman')
 pacman::p_load(tidycensus, dplyr, tigris, sf, here)
 setwd(here())
 
+if(!dir.exists("data/tidy")) dir.create("data/tidy", recursive = TRUE)
+
 juris_vars <- c("Median Gross Rent" = "B25064_001E", 
   "Median Home Value" = "B25077_001E")
 
