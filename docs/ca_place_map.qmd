@@ -1,0 +1,25 @@
+---
+title: "Statewide rents-to-income ratio map"
+author: "Arthur Gailes"
+date: "5/22/2021"
+format: 
+  html:
+    code-fold: true
+---
+
+Project Description: A statewide map comparing the median home price in every jurisdiction to metropolitan household income. Generally, three to five is considered to be a healthy rate---this interactive map will reveal potentially exclusionary jurisdictions.
+
+Note: the title says rents to income, but the description specifies home price, so I did both. Rents are compared to monthly income.
+
+```{r setup}
+#| include: false
+#| message: false
+
+pacman::p_load(sf, dplyr, mapview, here)
+knitr::opts_knit$set(root.dir = here())
+```
+
+```{r}
+#| include: false
+```
+
