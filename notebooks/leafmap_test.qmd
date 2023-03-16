@@ -1,0 +1,65 @@
+---
+format:
+  html:
+    code-fold: true
+editor:
+  render-on-save: true
+---
+
+
+```{python}
+import pandas as pd
+import geopandas as gpd
+import leafmap.leaflet as leaf
+```
+
+Load the shapefiles
+
+
+
+```{python}
+place_data = gpd.read_file("data/tidy/place_acs_data.gpkg")
+ca_geo = gpd.read_file("data/tidy/ca_shp.gpkg")
+ca_metro_data = gpd.read_file("data/tidy/metro_acs_data.gpkg")
+```
+
+```{r}
+#| echo: false
+#| label: data-proc
+place_data_labs <- place_data |> mutate(
+  home_inc_ratio = round(home_inc_ratio, 1),
+  home_inc_fac = cut(
+    home_inc_ratio,
+    c(0, 1, 3, 5, Inf),
+    paste(c("0-1", "1-3", "3-5", "5 or more"), "to 1")),
+  rent_inc_pct_str = scales::percent(rent_inc_pct, accuracy = 0.1),
+  rent_inc_lab = cut(
+    rent_inc_pct,
+    c(0, 0.1, 0.3, 0.4, Inf),
+    c("0-9%", "10-29%", "30-39% (Burdened)", "40% or more (Severely Burdened)")
+  )
+)
+```
+
+```{python}
+# repeat the above in python
+place_data_labs = place_data.assign(
+  home_inc_ratio = round(place_data.home_inc_ratio, 1),
+  home_inc_fac = pd.cut(
+    place_data.home_inc_ratio,
+    bins=[0, 1, 3, 5, np.inf],
+    labels=["0-1", "1-3", "3-5", "5 or more to 1"]),
+  rent_inc_pct_str = place_data.rent_inc_pct.map("{:.0%}".format),
+  rent_inc_lab = pd.cut(
+    place_data.rent_inc_pct,
+    bins=[0, 0.1, 0.3, 0.4, np.inf],
+    labels=["0-9%", "10-29%", "30-39% (Burdened)", "40% or more (Severely Burdened)"]
+  )
+)
+```
+
+```{python}
+leafmap.Map()
+m.add_gdf(place_data_labs, layer_name = "Places")
+m
+```
