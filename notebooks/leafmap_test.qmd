@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import leafmap as leaf
+import leafmap.colormaps as cm
 ```
 
 Load the shapefiles
@@ -26,12 +27,19 @@ ca_metro_data = gpd.read_file("../data/tidy/metro_acs_data.gpkg")
 
 
 ```{python}
+labels = [
+      "Highly Inclusive Jurisdictions: 0-2.9",
+      "Inclusive Jurisdictions: 3-4.9",
+      "At-Risk Jurisdictions: 5-9.9",
+      "Exclusionary Jurisdictions: 10-14.9",
+      "Extremely Exclusionary Jurisdictions: 15+"]
+
 place_data_labs = place_data.assign(
   home_inc_ratio = round(place_data.home_inc_ratio, 1),
   home_inc_fac = pd.cut(
     place_data.home_inc_ratio,
-    bins=[0, 1, 3, 5, np.inf],
-    labels=["0-1", "1-3", "3-5", "5 or more to 1"]),
+    bins=[0, 2.9, 4.9, 9.9, 14.9, np.inf],
+    labels = labels),
   rent_inc_pct_str = place_data.rent_inc_pct.map("{:.0%}".format),
   rent_inc_lab = pd.cut(
     place_data.rent_inc_pct,
@@ -39,10 +47,47 @@ place_data_labs = place_data.assign(
     labels=["0-9%", "10-29%", "30-39% (Burdened)", "40% or more (Severely Burdened)"]
   )
 )
+
+# convert to geoJSON to allow leaflet styling
+place_json = leaf.gdf_to_geojson(place_data_labs, epsg = "4326")
+```
+
+```{python}
+
+# place_data_labs.head()
+```
+
+```{python}
+
+# color labels from green to red
+colors = [
+  "#00ff00", "#a6d96a", "#ffffbf", "#fdae61", "#ff0000"
+]
+labels
+```
+
+```{python}
+# create a style for filled polygons
+style = {'fillOpacity': 0.5, "color": "black"}
 ```
 
 ```{python}
 m = leaf.Map()
-m.add_gdf(place_data_labs, layer_name = "Places")
+# m.add_gdf(
+#   place_data_labs,
+#   layer_name = "Places",
+#   style = style,
+m.add_gdf(
+  place_data_labs,
+  layer_name = "Places",
+  style = style,
+  fill_colors = colors)
+
+m.add_legend(
+  title = "Ratio of Home Values to Income",
+  layer_name = "Places",
+  labels = labels,
+  colors = colors,
+)
 m
 ```
