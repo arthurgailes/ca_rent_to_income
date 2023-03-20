@@ -55,4 +55,6 @@ ca_place_avm = ca_block_avm_place.groupby(["place_2010", "placenm"])["avm_2021"]
 # drop NAs
 ca_place_avm.dropna(inplace=True)
 
-ca_place_avm.to_csv("data/raw/ca_place_avm.csv", index=False)
+ca_place_avm["placenm"] = ca_place_avm["placenm"].str.replace(", CA", "")
+
+ca_place_avm.to_csv("data/tidy/ca_place_avm.csv", index=False)
