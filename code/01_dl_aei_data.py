@@ -10,7 +10,7 @@ Place-Block crosswalk source: https://mcdc.missouri.edu/applications/geocorr2018
 To repeat, just download, unzip in data/raw and run this script.
 """
 
-
+""" Uncomment to run
 import pandas as pd
 import geopandas as gpd
 
@@ -58,3 +58,4 @@ ca_place_avm.dropna(inplace=True)
 ca_place_avm["placenm"] = ca_place_avm["placenm"].str.replace(", CA", "")
 
 ca_place_avm.to_csv("data/tidy/ca_place_avm.csv", index=False)
+"""
