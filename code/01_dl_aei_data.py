@@ -1,7 +1,7 @@
 """
-  This is the code to process the original AEI home income data.
+This is the code to process the original AEI home income data.
 For reference only; it's no longer needed because the truncated california
-data is included in the data/raw directory.
+data is included in the data/tidy directory.
 
 AVM Source: https://aeihousingcenter.org/public/data/wod/block_20211013.zip
 
@@ -39,23 +39,21 @@ xwalk_place_block["tract"] = xwalk_place_block["tract"].str.replace(".", "")
 
 xwalk_place_block["block_2010"] = xwalk_place_block["county"] + xwalk_place_block["tract"] + xwalk_place_block["block"]
 
-xwalk_place_block["place_2010"] = "06" + xwalk_place_block["placefp"]
+xwalk_place_block["place_2010_id"] = "06" + xwalk_place_block["placefp"]
 
 # test to ensure no block_2010 is duplicated
 assert xwalk_place_block["block_2010"].nunique() == xwalk_place_block.shape[0]
 
-xwalk_clean = xwalk_place_block[["block_2010", "place_2010", "placenm"]].copy()
+xwalk_clean = xwalk_place_block[["block_2010", "place_2010_id", "placenm"]].copy()
 
 # join to avm
 ca_block_avm_place = ca_block_avm.merge(xwalk_clean, on="block_2010", how="inner")
 
 # get median avms
-ca_place_avm = ca_block_avm_place.groupby(["place_2010", "placenm"])["avm_2021"].median().reset_index()
+ca_place_avm = ca_block_avm_place.groupby(["place_2010_id"])["avm_2021"].median().reset_index()
 
 # drop NAs
 ca_place_avm.dropna(inplace=True)
-
-ca_place_avm["placenm"] = ca_place_avm["placenm"].str.replace(", CA", "")
 
 ca_place_avm.to_csv("data/tidy/ca_place_avm.csv", index=False)
 """
