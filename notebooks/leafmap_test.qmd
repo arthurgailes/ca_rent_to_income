@@ -20,9 +20,8 @@ Load the shapefiles
 
 
 ```{python}
-place_data = gpd.read_file("../data/tidy/place_acs_data.gpkg")
-ca_geo = gpd.read_file("../data/tidy/ca_shp.gpkg")
-ca_metro_data = gpd.read_file("../data/tidy/metro_acs_data.gpkg")
+place_geo_data = gpd.read_file("../data/tidy/map_data_income_avm.gpkg")
+place_geo_data
 ```
 
 
@@ -44,45 +43,45 @@ color_dict = dict(zip(labels, colors))
 color_dict
 ```
 
-```{python}
-place_data_lab
-```
 
 ```{python}
 
 # Format data for hover
-place_data_lab = place_data[["place", "home_inc_ratio", "median_home_value", "median_hh_income_cbsa", "geometry"]]
+map_data_lab = place_geo_data.copy()
 
-place_data_lab = place_data_lab[place_data_lab["home_inc_ratio"].notna()]
+map_data_lab = map_data_lab[map_data_lab["avm_income_ratio"].notna()]
 
-place_data_lab = place_data_lab.rename(columns={
-  "place": "Place",
-  "home_inc_ratio": "Home to Income Ratio",
-  "median_home_value": "Median Home Value",
-  "median_hh_income_cbsa": "Median Household Income (CBSA)"})
+map_data_lab["avm_income_ratio"] = round(map_data_lab["avm_income_ratio"], 1)
 
-
-place_data_lab["Home to Income Ratio"] = round(place_data_lab["Home to Income Ratio"], 1)
-
-place_data_lab["Home to Income Ratio Category"] = pd.cut(
-    place_data_lab["Home to Income Ratio"],
+map_data_lab["Home Value to Income Ratio Category"] = pd.cut(
+    map_data_lab["avm_income_ratio"],
     bins=[0, 2.9, 4.9, 9.9, 14.9, np.inf],
     labels = labels)
 
-# place_data_lab["home_inc_color"] = place_data_lab["Home to Income Ratio Category"].map(color_dict)
+# map_data_lab["home_inc_color"] = map_data_lab["Home Value to Income Ratio Category"].map(color_dict)
 
 # convert home value and income columns to dollars
-place_data_lab["Median Home Value"] = place_data_lab["Median Home Value"].apply(lambda x: "${:,.0f}".format(x))
-place_data_lab["Median Household Income (CBSA)"] = place_data_lab["Median Household Income (CBSA)"].apply(lambda x: "${:,.0f}".format(x))
+map_data_lab["place_median_avm_2021"] = map_data_lab["place_median_avm_2021"].apply(lambda x: "${:,.0f}".format(x))
+map_data_lab["cbsa_median_income_2021"] = map_data_lab["cbsa_median_income_2021"].apply(lambda x: "${:,.0f}".format(x))
 
-# convert to geoJSON to allow leaflet styling
-place_json = leaf.gdf_to_geojson(place_data_lab, epsg = "4326")
+
+
+map_data_lab = map_data_lab.rename(columns={
+  "place": "Place",
+  "avm_income_ratio": "Home Value to Income Ratio",
+  "place_median_avm_2021": "Median Home Value",
+  "cbsa_median_income_2021": "Median Household Income (CBSA)",
+  "place_name": "Place Name",
+  "cbsa_name": "CBSA Name"})
+
+# drop id columns
+map_data_lab = map_data_lab.drop(columns=["cbsa_2020_id", "place_2010_id"])
 
 ```
 
 ```{python}
 
-place_data_lab.head()
+map_data_lab.head()
 ```
 
 
@@ -92,7 +91,7 @@ place_data_lab.head()
 # create a style callback function that takes a feature and returns a style dictionary
 def style_callback(feature):
   return {
-    'fillColor': color_dict[feature["properties"]["Home to Income Ratio Category"]],
+    'fillColor': color_dict[feature["properties"]["Home Value to Income Ratio Category"]],
     'fillOpacity': 0.7,
     'color': 'black',
     'weight': 1,
@@ -105,13 +104,13 @@ def style_callback(feature):
 m = leaf.Map()
 
 m.add_gdf(
-  place_data_lab,
+  map_data_lab,
   layer_name = "Places",
   style_callback = style_callback)
 
 # m.add_data(
 #   place_data_lab,
-#   # column = ""Home to Income Ratio Category"",
+#   # column = ""Home Value to Income Ratio Category"",
 #   style_callback = style_callback)
 
 m.add_legend(
