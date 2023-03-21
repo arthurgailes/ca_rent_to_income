@@ -34,54 +34,85 @@ labels = [
       "Exclusionary Jurisdictions: 10-14.9",
       "Extremely Exclusionary Jurisdictions: 15+"]
 
-place_data_labs = place_data.assign(
-  home_inc_ratio = round(place_data.home_inc_ratio, 1),
-  home_inc_fac = pd.cut(
-    place_data.home_inc_ratio,
-    bins=[0, 2.9, 4.9, 9.9, 14.9, np.inf],
-    labels = labels),
-  rent_inc_pct_str = place_data.rent_inc_pct.map("{:.0%}".format),
-  rent_inc_lab = pd.cut(
-    place_data.rent_inc_pct,
-    bins=[0, 0.1, 0.3, 0.4, np.inf],
-    labels=["0-9%", "10-29%", "30-39% (Burdened)", "40% or more (Severely Burdened)"]
-  )
-)
-
-# convert to geoJSON to allow leaflet styling
-place_json = leaf.gdf_to_geojson(place_data_labs, epsg = "4326")
-```
-
-```{python}
-
-# place_data_labs.head()
-```
-
-```{python}
-
 # color labels from green to red
 colors = [
   "#00ff00", "#a6d96a", "#ffffbf", "#fdae61", "#ff0000"
 ]
-labels
+
+# create a dictionary from labels to colors
+color_dict = dict(zip(labels, colors))
+color_dict
 ```
 
 ```{python}
-# create a style for filled polygons
-style = {'fillOpacity': 0.5, "color": "black"}
+place_data_lab
 ```
+
+```{python}
+
+# Format data for hover
+place_data_lab = place_data[["place", "home_inc_ratio", "median_home_value", "median_hh_income_cbsa", "geometry"]]
+
+place_data_lab = place_data_lab[place_data_lab["home_inc_ratio"].notna()]
+
+place_data_lab = place_data_lab.rename(columns={
+  "place": "Place",
+  "home_inc_ratio": "Home to Income Ratio",
+  "median_home_value": "Median Home Value",
+  "median_hh_income_cbsa": "Median Household Income (CBSA)"})
+
+
+place_data_lab["Home to Income Ratio"] = round(place_data_lab["Home to Income Ratio"], 1)
+
+place_data_lab["Home to Income Ratio Category"] = pd.cut(
+    place_data_lab["Home to Income Ratio"],
+    bins=[0, 2.9, 4.9, 9.9, 14.9, np.inf],
+    labels = labels)
+
+# place_data_lab["home_inc_color"] = place_data_lab["Home to Income Ratio Category"].map(color_dict)
+
+# convert home value and income columns to dollars
+place_data_lab["Median Home Value"] = place_data_lab["Median Home Value"].apply(lambda x: "${:,.0f}".format(x))
+place_data_lab["Median Household Income (CBSA)"] = place_data_lab["Median Household Income (CBSA)"].apply(lambda x: "${:,.0f}".format(x))
+
+# convert to geoJSON to allow leaflet styling
+place_json = leaf.gdf_to_geojson(place_data_lab, epsg = "4326")
+
+```
+
+```{python}
+
+place_data_lab.head()
+```
+
+
+
+```{python}
+
+# create a style callback function that takes a feature and returns a style dictionary
+def style_callback(feature):
+  return {
+    'fillColor': color_dict[feature["properties"]["Home to Income Ratio Category"]],
+    'fillOpacity': 0.7,
+    'color': 'black',
+    'weight': 1,
+  }
+```
+
+
 
 ```{python}
 m = leaf.Map()
-# m.add_gdf(
-#   place_data_labs,
-#   layer_name = "Places",
-#   style = style,
+
 m.add_gdf(
-  place_data_labs,
+  place_data_lab,
   layer_name = "Places",
-  style = style,
-  fill_colors = colors)
+  style_callback = style_callback)
+
+# m.add_data(
+#   place_data_lab,
+#   # column = ""Home to Income Ratio Category"",
+#   style_callback = style_callback)
 
 m.add_legend(
   title = "Ratio of Home Values to Income",
