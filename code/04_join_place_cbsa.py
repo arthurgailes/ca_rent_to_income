@@ -85,7 +85,7 @@ map_data_lab["cbsa_name"] = map_data_lab["cbsa_name"].str.replace(", CA", "")
 map_data_lab = map_data_lab.rename(columns={
   "place": "Place",
   "avm_income_ratio": "Home Value to Income Ratio",
-  "place_median_avm_2021": "Median Home Value",
+  "place_median_avm_2021": "Median Home Value (Single Family)",
   "cbsa_median_income_2021": "Median Household Income (CBSA)",
   "place_name": "Place Name",
   "cbsa_name": "CBSA Name"})
