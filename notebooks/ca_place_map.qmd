@@ -2,68 +2,92 @@
 title: "Statewide rents-to-income ratio map"
 author: "Arthur Gailes"
 date: "`r Sys.Date()`"
-format: 
+format:
   html:
     code-fold: true
-editor_options: 
+    echo: false
+    warning: false
+    message: false
+    page-layout: full
+editor_options:
   chunk_output_type: console
+editor:
+  render-on-save: true
 ---
 
 Project Description: A statewide map comparing the median home price in every jurisdiction to metropolitan household income. Generally, three to five is considered to be a healthy rate---this interactive map will reveal potentially exclusionary jurisdictions.
 
-*Note*: the title says rents to income, but the description specifies home price, so I did both. Rents are compared to monthly income.
 
 ```{r setup}
 #| include: false
-#| message: false
-pacman::p_load(sf, dplyr, mapview, here)
+pacman::p_load(sf, dplyr, leaflet, leafpop, here)
+setwd(here())
 knitr::opts_knit$set(root.dir = here())
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+mapview::mapviewOptions(fgb = FALSE)
 ```
 
 ```{r}
-#| echo: false
-place_data <- st_read("data/tidy/place_acs_data.gpkg", quiet = TRUE)
-ca_geo <- st_read("data/tidy/ca_shp.gpkg", quiet = TRUE)
-ca_metro_data <- st_read("data/tidy/metro_acs_data.gpkg", quiet = TRUE)
+map_data <- st_read("data/tidy/map_data_income_avm.gpkg", quiet = TRUE) |>
+  rename_with( ~gsub("\\.", " ", .x), matches("\\."))
 ```
 
 ```{r}
-#| echo: false
 #| label: data-proc
-place_data_labs <- place_data |> mutate(
-  home_inc_ratio = round(home_inc_ratio, 1),
-  home_inc_fac = cut(
-    home_inc_ratio, 
-    c(0, 1, 3, 5, Inf),
-    paste(c("0-1", "1-3", "3-5", "5 or more"), "to 1")),
-  rent_inc_pct_str = scales::percent(rent_inc_pct, accuracy = 0.1),
-  rent_inc_lab = cut(
-    rent_inc_pct,
-    c(0, 0.1, 0.3, 0.4, Inf),
-    c("0-9%", "10-29%", "30-39% (Burdened)", "40% or more (Severely Burdened)")
-  )
+labels = c(
+    "Highly Inclusive Jurisdictions: 0-2.9",
+    "Inclusive Jurisdictions: 3-4.9",
+    "At-Risk Jurisdictions: 5-9.9",
+    "Exclusionary Jurisdictions: 10-14.9",
+    "Extremely Exclusionary Jurisdictions: 15+")
+
+color = c("#00ff00", "#a6d96a", "#ffffbf", "#fdae61", "#ff0000")
+
+map_data <- mutate(map_data, `Home Value to Income Ratio Category` = factor(
+  `Home Value to Income Ratio Category`, levels = labels)
 )
 ```
 
 ### Home Values to Income
 
 ```{r}
-mapview(
-  place_data_labs, 
-  zcol = 'home_inc_fac', 
-  label = "home_inc_ratio",
-  layer.name = "Ratio of Home Values to Income")
+popupCols <- grep("^[A-Z]", names(map_data), value = TRUE)
+factpal <- colorFactor(color, map_data$`Home Value to Income Ratio Category`)
+
+
+m <- leaflet(map_data, options = leafletOptions()) |>
+  # Base groups
+  addTiles(group = "OSM (default)") |>
+  addProviderTiles(providers$Stamen.Toner, group = "Toner") |>
+  addProviderTiles(providers$Stamen.TonerLite, group = "Toner Lite") |>
+  addProviderTiles(providers$Esri.WorldStreetMap, group = "Esri World Street Map") |>
+  addProviderTiles(providers$Esri.WorldImagery, group = "Esri World Imagery") |>
+  addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Positron") |>
+  addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark Matter") |>
+  addProviderTiles(providers$OpenStreetMap.France, group = "OpenStreetMap France") |>
+  # Overlay groups
+  addPolygons(
+    fillColor = ~factpal(`Home Value to Income Ratio Category`),
+    color = "black",
+    weight = 0.5,
+    label = ~`Home Value to Income Ratio Category`,
+    popup = popupTable(map_data, feature.id = FALSE, row.numbers = FALSE, zcol = popupCols),
+    group = "Places",
+    options = pathOptions(attribution = "AEI Housing Center, U.S. Census Bureau")) |>
+  # Layers control
+  addLayersControl(
+    baseGroups = c("OSM (default)", "Toner", "Toner Lite", "Esri World Street Map", "Esri World Imagery", "CartoDB Positron", "CartoDB Dark Matter", "OpenStreetMap France"),
+    # overlayGroups = c("Quakes", "Outline"),
+    options = layersControlOptions()
+  )
+m
+
 ```
-
--   Universe: Owner-occupied housing units
-
-### Rents as a percentage of monthly income
 
 ```{r}
-mapview(
-  place_data_labs, 
-  zcol = 'rent_inc_lab',
-  label = "rent_inc_pct_str",
-  layer.name = "Gross Rent % of Monthly Income")
+#| include: false
+#| eval: false
+htmlwidgets::saveWidget(m, "product/map_income_avm.html", selfcontained = FALSE)
 ```
+

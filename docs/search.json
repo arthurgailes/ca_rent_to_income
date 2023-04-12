@@ -5,5 +5,26 @@
     "title": "Statewide rents-to-income ratio map",
     "section": "",
     "text": "Project Description: A statewide map comparing the median home price in every jurisdiction to metropolitan household income. Generally, three to five is considered to be a healthy rate—this interactive map will reveal potentially exclusionary jurisdictions.\nNote: the title says rents to income, but the description specifies home price, so I did both. Rents are compared to monthly income.\n\n\n\n\n\n\n\nHome Values to Income\n\n\nCode\nmapview(\n  place_data_labs, \n  zcol = 'home_inc_fac', \n  label = \"home_inc_ratio\",\n  layer.name = \"Ratio of Home Values to Income\")\n\n\n\n\n\n\n\n\nUniverse: Owner-occupied housing units\n\n\n\nRents as a percentage of monthly income\n\n\nCode\nmapview(\n  place_data_labs, \n  zcol = 'rent_inc_lab',\n  label = \"rent_inc_pct_str\",\n  layer.name = \"Gross Rent % of Monthly Income\")"
+  },
+  {
+    "objectID": "notebooks/leafmap_test.html",
+    "href": "notebooks/leafmap_test.html",
+    "title": "California Rent to Income Map",
+    "section": "",
+    "text": "Code\nimport numpy as np\nimport pandas as pd\nimport geopandas as gpd\nimport leafmap.foliumap as leaf\n# import leafmap as leaf\nimport leafmap.colormaps as cm\nimport os\n\n\nLoad the shapefiles\n\n\nCode\nplace_geo_data = gpd.read_file(\"../data/tidy/map_data_income_avm.gpkg\")\nplace_geo_data\n\n\n\n\nCode\nlabels = [\n      \"Highly Inclusive Jurisdictions: 0-2.9\",\n      \"Inclusive Jurisdictions: 3-4.9\",\n      \"At-Risk Jurisdictions: 5-9.9\",\n      \"Exclusionary Jurisdictions: 10-14.9\",\n      \"Extremely Exclusionary Jurisdictions: 15+\"]\n\n# color labels from green to red\ncolors = [\n  \"#00ff00\", \"#a6d96a\", \"#ffffbf\", \"#fdae61\", \"#ff0000\"\n]\n\n# create a dictionary from labels to colors\ncolor_dict = dict(zip(labels, colors))\ncolor_dict\n\n\n\n\nCode\n# Format data for hover\nmap_data_lab = place_geo_data.copy()\n\nmap_data_lab = map_data_lab[map_data_lab[\"avm_income_ratio\"].notna()]\n\nmap_data_lab[\"avm_income_ratio\"] = round(map_data_lab[\"avm_income_ratio\"], 1)\n\nmap_data_lab[\"Home Value to Income Ratio Category\"] = pd.cut(\n    map_data_lab[\"avm_income_ratio\"],\n    bins=[0, 2.9, 4.9, 9.9, 14.9, np.inf],\n    labels = labels)\n\n# map_data_lab[\"home_inc_color\"] = map_data_lab[\"Home Value to Income Ratio Category\"].map(color_dict)\n\n# convert home value and income columns to dollars\nmap_data_lab[\"place_median_avm_2021\"] = map_data_lab[\"place_median_avm_2021\"].apply(lambda x: \"${:,.0f}\".format(x))\nmap_data_lab[\"cbsa_median_income_2021\"] = map_data_lab[\"cbsa_median_income_2021\"].apply(lambda x: \"${:,.0f}\".format(x))\n\n\n\nmap_data_lab = map_data_lab.rename(columns={\n  \"place\": \"Place\",\n  \"avm_income_ratio\": \"Home Value to Income Ratio\",\n  \"place_median_avm_2021\": \"Median Home Value\",\n  \"cbsa_median_income_2021\": \"Median Household Income (CBSA)\",\n  \"place_name\": \"Place Name\",\n  \"cbsa_name\": \"CBSA Name\"})\n\n# drop id columns\nmap_data_lab = map_data_lab.drop(columns=[\"cbsa_2020_id\", \"place_2010_id\"])\n\n\n\n\nCode\nmap_data_lab.head()\n\n\n\n\nCode\n# create a style callback function that takes a feature and returns a style dictionary\ndef style_callback(feature):\n  return {\n    'fillColor': color_dict[feature[\"properties\"][\"Home Value to Income Ratio Category\"]],\n    'fillOpacity': 0.7,\n    'color': 'black',\n    'weight': 1,\n  }\n\n\n\n\nCode\nm = leaf.Map(\n  draw_control = False,\n  measure_control = False,\n)\n\nm.add_data(\n  map_data_lab,\n  column = \"Home Value to Income Ratio Category\",\n  layer_name = \"Places\",\n  style_callback = style_callback)\n\n# m.add_data(\n#   place_data_lab,\n#   # column = \"\"Home Value to Income Ratio Category\"\",\n#   style_callback = style_callback)\n\nm.add_legend(\n  title = \"Ratio of Home Values to Income\",\n  # layer_name = \"Places\",\n  labels = labels,\n  colors = colors,\n)\nm"
+  },
+  {
+    "objectID": "notebooks/test.html",
+    "href": "notebooks/test.html",
+    "title": "California Rent to Income Map",
+    "section": "",
+    "text": "import pandas as pd\nimport geopandas as gpd"
+  },
+  {
+    "objectID": "notebooks/ca_place_map.html",
+    "href": "notebooks/ca_place_map.html",
+    "title": "Statewide rents-to-income ratio map",
+    "section": "",
+    "text": "Project Description: A statewide map comparing the median home price in every jurisdiction to metropolitan household income. Generally, three to five is considered to be a healthy rate—this interactive map will reveal potentially exclusionary jurisdictions.\n\n\n\n\n\n\n\nHome Values to Income"
   }
 ]
