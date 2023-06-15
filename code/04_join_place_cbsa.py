@@ -94,3 +94,4 @@ map_data_lab = map_data_lab.rename(columns={
 map_data_lab = map_data_lab.drop(columns=["cbsa_2020_id", "place_2010_id"])
 
 map_data_lab.to_file("data/tidy/map_data_income_avm.gpkg", driver = "GPKG")
+map_data_lab.to_file("data/tidy/map_data_income_avm/map_data_income_avm.shp", driver = "Shapefile")
